@@ -4,11 +4,10 @@ import { JSONSchema7 } from 'json-schema';
 import debug from 'debug';
 import { PermissionError } from './permission-error';
 
-const log = debug('canornot');
-
 type SchemaFunction = () => JSONSchema7 | Promise<JSONSchema7>;
 
 interface CanOrNotOptions {
+  logger?: (msg: string, ...args: any[]) => any;
   rejectOnError?: boolean;
   rejectOnPermissionDenied?: boolean;
   returnSchemas?: boolean;
@@ -17,15 +16,20 @@ interface CanOrNotOptions {
 }
 
 export class Canornot {
-  private options: CanOrNotOptions;
+  private options: Required<CanOrNotOptions>;
 
   constructor(opts: CanOrNotOptions) {
     this.options = {
       rejectOnError: true,
       rejectOnPermissionDenied: true,
       returnSchemas: false,
+      logger: debug('canornot'),
       ...opts,
     };
+  }
+
+  protected log(msg: string, ...args: any[]): void {
+    this.options.logger(msg, ...args);
   }
 
   public async can(
@@ -47,14 +51,14 @@ export class Canornot {
       const [actorSchema, policySchema] = schemas;
 
       if (typeof actorSchema !== 'object') {
-        log('Invalid actor schema');
+        this.log('Invalid actor schema');
         throw new TypeError(
           `Actor Schema must be an object or a function/promise that returns an object. Saw ${typeof actorSchema}`,
         );
       }
 
       if (typeof policySchema !== 'object') {
-        log('Invalid policy schema');
+        this.log('Invalid policy schema');
         throw new TypeError(
           `Policy Schema must be an object or a function/promise that returns an object. Saw ${typeof policySchema}`,
         );
@@ -72,17 +76,17 @@ export class Canornot {
         [permission]: data,
       });
 
-      log('policySchema: %o', policySchema);
-      log('actorSchema: %o', actorSchema);
-      log('Permission data: %o', {
+      this.log('policySchema: %o', policySchema);
+      this.log('actorSchema: %o', actorSchema);
+      this.log('Permission data: %o', {
         [permission]: data,
       });
 
-      log('Permission allowed/valid?', valid);
+      this.log('Permission allowed/valid?', valid);
 
       if (this.options.rejectOnPermissionDenied === true) {
         if (!valid) {
-          log('Throwing PermissionError', ajv.errors);
+          this.log('Throwing PermissionError', ajv.errors);
           const err = new PermissionError(
             `Permission Denied for \`${permission}\``,
           );
@@ -98,10 +102,10 @@ export class Canornot {
         }
         return valid;
       }
-      log('Returning `%s` result: %s', permission, valid);
+      this.log('Returning `%s` result: %s', permission, valid);
       return valid;
     } catch (err) {
-      log('Error fetching actor or policy schema', err.message);
+      this.log('Error fetching actor or policy schema', err.message);
 
       // it's not a basic permission error;
       if (
