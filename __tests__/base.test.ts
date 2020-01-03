@@ -1,4 +1,3 @@
-import { ValidationError } from 'ajv';
 import { JSONSchema7 } from 'json-schema';
 import Canornot from '../lib';
 import { PermissionError } from '../lib/permission-error';
@@ -57,6 +56,16 @@ const acWithTimeoutCallbackPolicyError = (): Canornot =>
       promiseWait(new TestError('Intentional Error'), 200),
     policySchema: (): Promise<JSONSchema7> =>
       promiseWait(new TestError('Intentional Error'), 200),
+  });
+
+const acWithSyncSchemaErrors = (): Canornot =>
+  new Canornot({
+    actorSchema: (): Promise<JSONSchema7> => {
+      throw new TestError('Intentional Error');
+    },
+    policySchema: (): Promise<JSONSchema7> => {
+      throw new TestError('Intentional Error');
+    },
   });
 
 const acWithTimeoutPromises = (): Canornot =>
@@ -216,19 +225,17 @@ describe('Base', () => {
       .catch((err): void => expect(err).toBeInstanceOf(TestError));
   });
 
-  test.only('Access Control with policy PermissionError0', () => {
+  test('Access Control with policy PermissionError0', () => {
     const permission = acWithObjects();
 
-    return (
-      permission
-        .can(1111111 as any)
-        .then(() => {
-          throw new Error('This test should throw an error');
-        })
-        .catch((err: Error): void => {
-          expect(err).toBeInstanceOf(PermissionError);
-        })
-    );
+    return permission
+      .can(1111111 as any)
+      .then(() => {
+        throw new Error('This test should throw an error');
+      })
+      .catch((err: Error): void => {
+        expect(err).toBeInstanceOf(PermissionError);
+      });
   });
 
   test('Access Control with policy TypeErrors1', () => {
@@ -323,8 +330,19 @@ describe('Base', () => {
         throw new Error('This test should throw an error');
       })
       .catch((err): void => {
-        expect(err).toBeInstanceOf(TypeError);
+        expect(err).toBeInstanceOf(TestError);
       });
+  });
+
+  test('Access Control with immediate sync errors in schema', () => {
+    const permission = acWithSyncSchemaErrors();
+
+    return permission
+      .can('user:get', 1)
+      .then(() => {
+        throw new Error('This test should throw an error');
+      })
+      .catch((err): void => expect(err).toBeInstanceOf(TestError));
   });
 
   // test('Access Control using patternProperties to allow an entire namespace', function () {
