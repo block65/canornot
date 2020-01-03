@@ -28,37 +28,30 @@ export class Canornot {
     };
   }
 
-  protected log(msg: string, ...args: any[]): void {
-    this.options.logger(msg, ...args);
-  }
-
   public async can(
     permission: string,
     data: unknown = {},
   ): Promise<boolean | { actor: JSONSchema7; policy: JSONSchema7 }> {
-    if (typeof permission !== 'string') {
-      throw new TypeError(
-        `Permission arg must be a string. ${typeof permission}`,
-      );
-    }
-
     try {
       const schemas = await Promise.all([
         this.getActorSchema(),
         this.getPolicySchema(),
-      ]);
+      ]).catch((err) => {
+        this.log('Error fetching actor or policy schemas', err.message);
+        throw err;
+      });
 
-      const [actorSchema, policySchema] = schemas;
+      const [actorSchema, policySchema] = schemas || [];
 
       if (typeof actorSchema !== 'object') {
-        this.log('Invalid actor schema');
+        this.log('Invalid actor schema', { actorSchema });
         throw new TypeError(
           `Actor Schema must be an object or a function/promise that returns an object. Saw ${typeof actorSchema}`,
         );
       }
 
       if (typeof policySchema !== 'object') {
-        this.log('Invalid policy schema');
+        this.log('Invalid policy schema', { policySchema });
         throw new TypeError(
           `Policy Schema must be an object or a function/promise that returns an object. Saw ${typeof policySchema}`,
         );
@@ -84,7 +77,7 @@ export class Canornot {
 
       this.log('Permission allowed/valid?', valid);
 
-      if (this.options.rejectOnPermissionDenied === true) {
+      if (this.options.rejectOnPermissionDenied) {
         if (!valid) {
           this.log('Throwing PermissionError', ajv.errors);
           const err = new PermissionError(
@@ -105,20 +98,22 @@ export class Canornot {
       this.log('Returning `%s` result: %s', permission, valid);
       return valid;
     } catch (err) {
-      this.log('Error fetching actor or policy schema', err.message);
-
       // it's not a basic permission error;
       if (
         err instanceof PermissionError &&
-        this.options.rejectOnPermissionDenied === true
+        this.options.rejectOnPermissionDenied
       ) {
         throw err;
-      } else if (this.options.rejectOnError === true) {
+      } else if (this.options.rejectOnError) {
         throw err;
       } else {
         return false;
       }
     }
+  }
+
+  protected log(msg: string, ...args: any[]): void {
+    this.options.logger(msg, ...args);
   }
 
   private async getActorSchema(): Promise<JSONSchema7> {

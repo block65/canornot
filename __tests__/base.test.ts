@@ -33,6 +33,7 @@ const promiseWait = (
 ): Promise<JSONSchema7> =>
   new Promise((resolve, reject): void => {
     setTimeout((): void => {
+      // eslint-disable-next-line no-unused-expressions
       value instanceof Error ? reject(value) : resolve(value);
     }, ms);
   });
@@ -117,15 +118,15 @@ const acWithoutRejectOnPermissionDenied = (): Canornot =>
 
 const acWithoutRejectOnError = (): Canornot =>
   new Canornot({
-    actorSchema: Promise.reject(new ValidationError([])),
-    policySchema: Promise.reject(new ValidationError([])),
+    actorSchema: Promise.reject(new TestError('test')),
+    policySchema: Promise.reject(new TestError('test')),
     rejectOnError: false,
   });
 
 const acWithRejectOnError = (): Canornot =>
   new Canornot({
-    actorSchema: Promise.reject(new ValidationError([])),
-    policySchema: Promise.reject(new ValidationError([])),
+    actorSchema: Promise.reject(new TestError('test')),
+    policySchema: Promise.reject(new TestError('test')),
   });
 
 describe('Base', () => {
@@ -215,7 +216,7 @@ describe('Base', () => {
       .catch((err): void => expect(err).toBeInstanceOf(TestError));
   });
 
-  test('Access Control with policy TypeErrors0', () => {
+  test.only('Access Control with policy PermissionError0', () => {
     const permission = acWithObjects();
 
     return (
@@ -225,7 +226,7 @@ describe('Base', () => {
           throw new Error('This test should throw an error');
         })
         .catch((err: Error): void => {
-          expect(err).toBeInstanceOf(TypeError);
+          expect(err).toBeInstanceOf(PermissionError);
         })
     );
   });
@@ -322,7 +323,7 @@ describe('Base', () => {
         throw new Error('This test should throw an error');
       })
       .catch((err): void => {
-        expect(err).toBeInstanceOf(ValidationError);
+        expect(err).toBeInstanceOf(TypeError);
       });
   });
 
