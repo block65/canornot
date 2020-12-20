@@ -20,7 +20,7 @@ instance for the relevant user.
 ```typescript
 import type { JSONSchema7 } from 'json-schema';
 import jsonwebtoken from 'jsonwebtoken';
-import { Canornot } from '@block65/canornot';
+import { CanOrNot } from '@block65/canornot';
 import { datastore } from './lib/some-kind-of-datastore';
 
 // A policy that allows getting your own user details, and editing companies
