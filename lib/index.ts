@@ -1,13 +1,11 @@
-import * as Ajv from 'ajv';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { JSONSchema7 } from 'json-schema';
-import debug from 'debug';
+import Ajv from 'ajv';
+import type { JSONSchema7 } from 'json-schema';
 import { PermissionError } from './permission-error';
 
 type SchemaFunction = () => JSONSchema7 | Promise<JSONSchema7>;
 
 interface CanOrNotOptions {
-  logger?: (msg: string, ...args: any[]) => any;
+  logger?: (data?: Record<string, unknown>, msg?: string) => any;
   rejectOnError?: boolean;
   rejectOnPermissionDenied?: boolean;
   returnSchemas?: boolean;
@@ -15,15 +13,14 @@ interface CanOrNotOptions {
   actorSchema: SchemaFunction | JSONSchema7 | Promise<JSONSchema7>;
 }
 
-export class Canornot {
-  private options: Required<CanOrNotOptions>;
+export class CanOrNot {
+  private options: CanOrNotOptions;
 
   constructor(opts: CanOrNotOptions) {
     this.options = {
       rejectOnError: true,
       rejectOnPermissionDenied: true,
       returnSchemas: false,
-      logger: debug('canornot'),
       ...opts,
     };
   }
@@ -31,36 +28,47 @@ export class Canornot {
   public async can(
     permission: string,
     data: unknown = {},
-  ): Promise<boolean | { actor: JSONSchema7; policy: JSONSchema7 }> {
+  ): Promise<{ actor: JSONSchema7; policy: JSONSchema7 } | boolean> {
     try {
       const schemas = await Promise.all([
         this.getActorSchema(),
         this.getPolicySchema(),
       ]).catch((err) => {
-        this.log('Error fetching actor or policy schemas', err.message);
+        this.log(
+          { err },
+          `Error fetching actor or policy schemas: ${err.message}`,
+        );
         throw err;
       });
 
       const [actorSchema, policySchema] = schemas || [];
 
       if (typeof actorSchema !== 'object') {
-        this.log('Invalid actor schema', { actorSchema });
+        this.log({ actorSchema }, 'Invalid actor schema');
         throw new TypeError(
           `Actor Schema must be an object or a function/promise that returns an object. Saw ${typeof actorSchema}`,
         );
       }
 
       if (typeof policySchema !== 'object') {
-        this.log('Invalid policy schema', { policySchema });
+        this.log({ policySchema }, 'Invalid policy schema');
         throw new TypeError(
           `Policy Schema must be an object or a function/promise that returns an object. Saw ${typeof policySchema}`,
         );
       }
 
-      policySchema.additionalProperties = false;
+      // force additionalProperties false if not provided
+      if (
+        policySchema.properties &&
+        !('additionalProperties' in policySchema)
+      ) {
+        policySchema.additionalProperties = false;
+      }
 
       const ajv = new Ajv({
-        missingRefs: 'fail',
+        strict: true,
+        allErrors: true,
+        verbose: !!this.options.logger,
       });
 
       ajv.addSchema(actorSchema, 'actor');
@@ -69,17 +77,22 @@ export class Canornot {
         [permission]: data,
       });
 
-      this.log('policySchema: %o', policySchema);
-      this.log('actorSchema: %o', actorSchema);
-      this.log('Permission data: %o', {
-        [permission]: data,
-      });
+      this.log(
+        {
+          policySchema,
+          actorSchema,
+          permissionData: {
+            [permission]: data,
+          },
+        },
+        'Schemas',
+      );
 
-      this.log('Permission allowed/valid?', valid);
+      this.log({ valid }, 'Permission allowed');
 
       if (this.options.rejectOnPermissionDenied) {
         if (!valid) {
-          this.log('Throwing PermissionError', ajv.errors);
+          this.log({ errors: ajv.errors }, 'Throwing PermissionError');
           const err = new PermissionError(
             `Permission Denied for \`${permission}\``,
           );
@@ -87,18 +100,21 @@ export class Canornot {
           err.data = data;
           throw err;
         }
-        if (this.options.returnSchemas) {
+
+        if (this.options.returnSchemas === true) {
           return {
             actor: actorSchema,
             policy: policySchema,
           };
         }
+
         return valid;
       }
-      this.log('Returning `%s` result: %s', permission, valid);
+
+      this.log({ permission, valid }, 'Returning result');
       return valid;
     } catch (err) {
-      // it's not a basic permission error;
+      // it's not a basic permission error
       if (
         err instanceof PermissionError &&
         this.options.rejectOnPermissionDenied
@@ -112,8 +128,10 @@ export class Canornot {
     }
   }
 
-  protected log(msg: string, ...args: any[]): void {
-    this.options.logger(msg, ...args);
+  protected log(data?: Record<string, unknown>, msg?: string): void {
+    if (this.options.logger) {
+      this.options.logger(data, msg);
+    }
   }
 
   private async getActorSchema(): Promise<JSONSchema7> {
@@ -127,8 +145,6 @@ export class Canornot {
     if (typeof this.options.policySchema === 'function') {
       return this.options.policySchema();
     }
-    return this.options.policySchema;
+    return Promise.resolve(this.options.policySchema);
   }
 }
-
-export default Canornot;

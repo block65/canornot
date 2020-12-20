@@ -1,38 +1,31 @@
-# Canornot
+# canornot
 
 An authorisation and access control library based on JSON Schema.
 
 ### Install
 
-Using NPM
-
 ```bash
-npm install canornot --save
-```
-
-Using Yarn
-
-```bash
-yarn add canornot
+yarn add @block65/canornot
 ```
 
 ### Usage
 
-Example ABAC module based on Canornot
+Example ABAC module based on canornot
 
-It exports a function which takes a JWT, verifies it and then returns a Canornot instance
-for that JWT
+#### abac.ts
 
-```javascript
-// abac.js
+Exports a function which takes a JWT, verifies it and then returns a `CanOrNot`
+instance for the relevant user.
 
-import * as jsonwebtoken from 'jsonwebtoken';
-import { Canornot } from '@colacube/canornot';
-import { datastore } from 'some-kind-of-datastore';
+```typescript
+import type { JSONSchema7 } from 'json-schema';
+import jsonwebtoken from 'jsonwebtoken';
+import { Canornot } from '@block65/canornot';
+import { datastore } from './lib/some-kind-of-datastore';
 
 // A policy that allows getting your own user details, and editing companies
 // in your list of company ids
-const userPolicySchema = {
+const policySchema: JSONSchema7 = {
   properties: {
     'user:get': {
       $ref: 'actor#/properties/userId',
@@ -43,7 +36,8 @@ const userPolicySchema = {
   },
 };
 
-async function getActorSchema({ userId }) {
+// Gets the actor schema with a little help from the datastore
+async function getActorSchema(userId: string): Promise<JSONSchema7> {
   const { userId, companyIds } = await datastore.fetchUserById(userId);
 
   return {
@@ -58,35 +52,39 @@ async function getActorSchema({ userId }) {
       },
       companyIds: {
         type: 'number',
-        enum: companyIds,
+        enum: [
+          null,
+          ...companyIds
+        ],
       },
     },
   };
 }
 
-export const createAbac = (jwt) => {
-
-  // Verify the JWT with our super secure secret
-  const decoded = jsonwebtoken.verify(jwt, 'canornot');
-
-  // Return a Canornot instance with our user policy schema
-  // and an actor schema based on the decoded JWT details 
-  return new Canornot({
-    actorSchema: getActorSchema(decoded),
-    policySchema: userPolicySchema,
+export function createAbac(jwt: string): Canornot {
+  // Returns a Canornot instance with our user policy schema
+  // and an actor schema based on the decoded JWT details
+  // NOTE: These methods can (and should) be memoized to reduce latency
+  return new CanOrNot({
+    policySchema,
+    actorSchema() {
+      const decoded = jsonwebtoken.verify(jwt, 'secret123');
+      return getActorSchema(decoded.userId);
+    },
   });
-};
+}
 ```
 
-Example use of the above ABAC module
+#### index.ts
 
-```javascript
+Example use of the above ABAC module `abac.ts`
 
-//This is our ABAC module based on Canornot
-import { createAbac } from './abac.js';
+```typescript
+// This is our ABAC module based on Canornot
+import { createAbac } from './abac';
 
-// JWT may come from a HTTP header or similar - it is signed, and contains {userId: 12344}
-const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcklkIjoxMjM0NCwiaWF0IjoxNTE2MjM5MDIyfQ.oJh686kpqqfvYbY8GjZn34iUpFQzNQTIRNBjfe90nGM';
+// JWT may come from a HTTP header or similar
+const jwt = 'eyJhbGciOiJIUz...NBjfe90nGM';
 
 // Create an ABAC instance using the JWT
 const userPermissions = createAbac(jwt);
@@ -103,7 +101,3 @@ userPermissions
   .then(() => console.log('Permission allowed!'))
   .catch(() => console.warn('Permission denied!'));
 ```
-
-### License
-
-MIT (See LICENCE file)

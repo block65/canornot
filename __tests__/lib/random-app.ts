@@ -1,5 +1,5 @@
-import { JSONSchema7 } from 'json-schema';
-import Canornot from '../../lib';
+import type { JSONSchema7 } from 'json-schema';
+import { CanOrNot } from '../../lib';
 
 const policySchema: JSONSchema7 = {
   $id: 'policy',
@@ -37,6 +37,7 @@ const policySchema: JSONSchema7 = {
     },
   },
   additionalProperties: false,
+  type: 'object',
   properties: {
     /**
      * USERS
@@ -62,11 +63,12 @@ const actorSchema: JSONSchema7 = {
   },
 };
 
-export const stackbin = (): Canornot =>
-  new Canornot({
+export function randomApp(): CanOrNot {
+  return new CanOrNot({
     rejectOnError: true,
     rejectOnPermissionDenied: true,
     returnSchemas: true,
     actorSchema,
     policySchema,
   });
+}

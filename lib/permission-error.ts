@@ -1,16 +1,15 @@
-import { CustomError } from '@colacube/custom-error';
-import * as Ajv from 'ajv';
+import type { ErrorObject } from 'ajv';
+import { CustomError, Status } from '@block65/custom-error';
 
 export class PermissionError extends CustomError {
-
-  public errors: Ajv.ErrorObject[] | null | undefined;
+  public errors: ErrorObject[] | null | undefined;
 
   public data: unknown;
 
   constructor(message: string) {
     super(message);
     this.setName('PermissionError');
-    this.statusCode = 403;
-    this.internal = true;
+    this.statusCode = Status.INVALID_ARGUMENT;
+    this.sensitive = true;
   }
 }

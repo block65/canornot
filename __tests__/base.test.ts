@@ -1,5 +1,5 @@
-import { JSONSchema7 } from 'json-schema';
-import Canornot from '../lib';
+import type { JSONSchema7 } from 'json-schema';
+import { CanOrNot } from '../lib';
 import { PermissionError } from '../lib/permission-error';
 
 class TestError extends Error {
@@ -10,6 +10,8 @@ class TestError extends Error {
 }
 
 const policySchema: JSONSchema7 = {
+  type: 'object',
+  additionalProperties: false,
   properties: {
     'user:get': {
       $ref: 'actor#/properties/userId',
@@ -18,6 +20,8 @@ const policySchema: JSONSchema7 = {
 };
 
 const actorSchema: JSONSchema7 = {
+  type: 'object',
+  additionalProperties: false,
   properties: {
     userId: {
       type: 'number',
@@ -32,34 +36,37 @@ const promiseWait = (
 ): Promise<JSONSchema7> =>
   new Promise((resolve, reject): void => {
     setTimeout((): void => {
-      // eslint-disable-next-line no-unused-expressions
-      value instanceof Error ? reject(value) : resolve(value);
+      if (value instanceof Error) {
+        reject(value);
+      } else {
+        resolve(value);
+      }
     }, ms);
   });
 
-const acWithTimeoutCallbacks = (): Canornot =>
-  new Canornot({
+const acWithTimeoutCallbacks = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): Promise<JSONSchema7> => promiseWait(actorSchema, 200),
     policySchema: (): Promise<JSONSchema7> => promiseWait(policySchema, 200),
   });
 
-const acWithTimeoutCallbackActorError = (): Canornot =>
-  new Canornot({
+const acWithTimeoutCallbackActorError = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): Promise<JSONSchema7> =>
       promiseWait(new TestError('Intentional Error'), 200),
     policySchema: (): Promise<JSONSchema7> => promiseWait(policySchema, 200),
   });
 
-const acWithTimeoutCallbackPolicyError = (): Canornot =>
-  new Canornot({
+const acWithTimeoutCallbackPolicyError = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): Promise<JSONSchema7> =>
       promiseWait(new TestError('Intentional Error'), 200),
     policySchema: (): Promise<JSONSchema7> =>
       promiseWait(new TestError('Intentional Error'), 200),
   });
 
-const acWithSyncSchemaErrors = (): Canornot =>
-  new Canornot({
+const acWithSyncSchemaErrors = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): Promise<JSONSchema7> => {
       throw new TestError('Intentional Error');
     },
@@ -68,14 +75,14 @@ const acWithSyncSchemaErrors = (): Canornot =>
     },
   });
 
-const acWithTimeoutPromises = (): Canornot =>
-  new Canornot({
+const acWithTimeoutPromises = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): Promise<JSONSchema7> => promiseWait(actorSchema, 200),
     policySchema: (): Promise<JSONSchema7> => promiseWait(policySchema, 200),
   });
 
-const acWithTimeoutBrokenPromises = (): Canornot =>
-  new Canornot({
+const acWithTimeoutBrokenPromises = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: new Promise((_, reject) =>
       setTimeout(() => reject(new TestError('Intentional Error')), 200),
     ),
@@ -84,56 +91,56 @@ const acWithTimeoutBrokenPromises = (): Canornot =>
     ),
   });
 
-const acWithObjects = (): Canornot =>
-  new Canornot({
+const acWithObjects = (): CanOrNot =>
+  new CanOrNot({
     actorSchema,
     policySchema,
   });
 
-const acWithFunctions = (): Canornot =>
-  new Canornot({
+const acWithFunctions = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: (): JSONSchema7 => actorSchema,
     policySchema: (): JSONSchema7 => policySchema,
   });
 
-const acWithStrings1 = (): Canornot =>
-  new Canornot({
+const acWithStrings1 = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: 'hahaha' as any, //
     policySchema,
   });
 
-const acWithStrings2 = (): Canornot =>
-  new Canornot({
+const acWithStrings2 = (): CanOrNot =>
+  new CanOrNot({
     actorSchema,
     policySchema: 'heeee' as any,
   });
 
 // @ts-ignore
-const acWithNoOptions = (): Canornot => new Canornot();
+const acWithNoOptions = (): CanOrNot => new CanOrNot();
 
-const acWithRejectOnPermissionDenied = (): Canornot =>
-  new Canornot({
+const acWithRejectOnPermissionDenied = (): CanOrNot =>
+  new CanOrNot({
     actorSchema,
     policySchema,
     rejectOnPermissionDenied: true,
   });
 
-const acWithoutRejectOnPermissionDenied = (): Canornot =>
-  new Canornot({
+const acWithoutRejectOnPermissionDenied = (): CanOrNot =>
+  new CanOrNot({
     actorSchema,
     policySchema,
     rejectOnPermissionDenied: false,
   });
 
-const acWithoutRejectOnError = (): Canornot =>
-  new Canornot({
+const acWithoutRejectOnError = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: Promise.reject(new TestError('test')),
     policySchema: Promise.reject(new TestError('test')),
     rejectOnError: false,
   });
 
-const acWithRejectOnError = (): Canornot =>
-  new Canornot({
+const acWithRejectOnError = (): CanOrNot =>
+  new CanOrNot({
     actorSchema: Promise.reject(new TestError('test')),
     policySchema: Promise.reject(new TestError('test')),
   });
@@ -326,7 +333,7 @@ describe('Base', () => {
 
     return permission
       .can('missing:permission', 999999999)
-      .then((): void => {
+      .then((xxx): void => {
         throw new Error('This test should throw an error');
       })
       .catch((err): void => {
@@ -334,15 +341,12 @@ describe('Base', () => {
       });
   });
 
-  test('Access Control with immediate sync errors in schema', () => {
+  test('Access Control with immediate sync errors in schema', async () => {
     const permission = acWithSyncSchemaErrors();
 
-    return permission
-      .can('user:get', 1)
-      .then(() => {
-        throw new Error('This test should throw an error');
-      })
-      .catch((err): void => expect(err).toBeInstanceOf(TestError));
+    await expect(permission.can('user:get', 1)).rejects.toBeInstanceOf(
+      TestError,
+    );
   });
 
   // test('Access Control using patternProperties to allow an entire namespace', function () {

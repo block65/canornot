@@ -1,8 +1,8 @@
-import { stackbin } from './lib/stackbin';
+import { randomApp } from './lib/random-app';
 import { PermissionError } from '../lib/permission-error';
 
-describe('Stackbin', () => {
-  const ac = stackbin();
+describe('Random App', () => {
+  const ac = randomApp();
 
   test('Basic User check', () =>
     ac.can('user:get', { userId: '00000098038114680832' }));

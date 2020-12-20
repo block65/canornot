@@ -1,7 +1,9 @@
-import { JSONSchema7 } from 'json-schema';
-import Canornot from '../../lib';
+import type { JSONSchema7 } from 'json-schema';
+import { CanOrNot } from '../../lib';
 
 const policySchema: JSONSchema7 = {
+  type: 'object',
+  additionalProperties: false,
   properties: {
     role: {
       $ref: 'actor#/properties/roles',
@@ -11,6 +13,8 @@ const policySchema: JSONSchema7 = {
 
 async function getActorSchema(): Promise<JSONSchema7> {
   return {
+    type: 'object',
+    additionalProperties: false,
     properties: {
       roles: {
         type: 'string',
@@ -20,8 +24,9 @@ async function getActorSchema(): Promise<JSONSchema7> {
   };
 }
 
-export const rbac = (/* options */): Canornot =>
-  new Canornot({
+export function rbac(): CanOrNot {
+  return new CanOrNot({
     actorSchema: getActorSchema(),
     policySchema,
   });
+}

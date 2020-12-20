@@ -1,7 +1,8 @@
-import { JSONSchema7 } from 'json-schema';
-import Canornot from '../../lib';
+import type { JSONSchema7 } from 'json-schema';
+import { CanOrNot } from '../../lib';
 
 const policySchema: JSONSchema7 = {
+  type: 'object',
   additionalProperties: false,
   properties: {
     'user:get': {
@@ -58,8 +59,8 @@ function getActorSchema(): JSONSchema7 {
   };
 }
 
-export const abac = (): Canornot =>
-  new Canornot({
+export const abac = (): CanOrNot =>
+  new CanOrNot({
     rejectOnPermissionDenied: false,
     actorSchema: getActorSchema(),
     policySchema,

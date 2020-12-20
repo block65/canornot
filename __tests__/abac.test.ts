@@ -19,9 +19,7 @@ describe('ABAC', (): void => {
     }
   });
 
-  test('Permission attributes as integer (REJECTED)', async (): Promise<
-    void
-  > => {
+  test('Permission attributes as integer (REJECTED)', async (): Promise<void> => {
     const allowed = await ac.can('project:get', 99999);
 
     if (allowed === true) {
@@ -29,9 +27,7 @@ describe('ABAC', (): void => {
     }
   });
 
-  test('Permission user:get attributes as undefined (REJECTED)', async (): Promise<
-    void
-  > => {
+  test('Permission user:get attributes as undefined (REJECTED)', async (): Promise<void> => {
     const allowed = await ac.can('user:get');
 
     if (allowed === true) {
@@ -47,9 +43,7 @@ describe('ABAC', (): void => {
     }
   });
 
-  test('Permission attributes as object (REJECTED)', async (): Promise<
-    void
-  > => {
+  test('Permission attributes as object (REJECTED)', async (): Promise<void> => {
     const allowed = await ac.can('account:get', { accountId: 999999 });
 
     if (allowed === true) {
@@ -57,9 +51,7 @@ describe('ABAC', (): void => {
     }
   });
 
-  test('Permission attributes as object w/undefiend values (REJECTED)', async (): Promise<
-    void
-  > => {
+  test('Permission attributes as object w/undefiend values (REJECTED)', async (): Promise<void> => {
     const allowed = await ac.can('account:get', { accountId: undefined });
 
     if (allowed === true) {
