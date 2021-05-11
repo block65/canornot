@@ -88,7 +88,7 @@ export class CanOrNot {
         'Schemas',
       );
 
-      this.log({ valid }, 'Permission allowed');
+      this.log({ valid }, 'Permission decision');
 
       if (this.options.rejectOnPermissionDenied) {
         if (!valid) {
