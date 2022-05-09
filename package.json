@@ -6,6 +6,10 @@
   "exports": {
     ".": "./dist/lib/index.js"
   },
+  "files": [
+    "dist/lib/*.js",
+    "dist/lib/*.d.ts"
+  ],
   "dependencies": {
     "@block65/custom-error": "^8.0.0",
     "ajv": "^8.11.0"
