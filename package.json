@@ -2,8 +2,9 @@
   "name": "@block65/canornot",
   "version": "3.0.0",
   "license": "MIT",
-  "main": "dist/index.js",
   "scripts": {
+  "exports": {
+    ".": "./dist/lib/index.js"
     "build": "tsc",
     "build:clean": "rimraf dist/*",
     "build:watch": "tsc -w",
