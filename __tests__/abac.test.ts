@@ -1,4 +1,5 @@
-import { abac } from './lib/abac';
+import { describe, test } from '@jest/globals';
+import { abac } from './lib/abac.js';
 
 describe('ABAC', (): void => {
   const ac = abac();

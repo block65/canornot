@@ -1,4 +1,5 @@
-import { rbac } from './lib/rbac';
+import { describe, test } from '@jest/globals';
+import { rbac } from './lib/rbac.js';
 
 describe('RBAC', (): void => {
   const ac = rbac();

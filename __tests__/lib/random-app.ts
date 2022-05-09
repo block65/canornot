@@ -1,5 +1,5 @@
 import type { JSONSchema7 } from 'json-schema';
-import { CanOrNot } from '../../lib';
+import { CanOrNot } from '../../lib/index.js';
 
 const policySchema: JSONSchema7 = {
   $id: 'policy',

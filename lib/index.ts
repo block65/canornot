@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import type { JSONSchema7 } from 'json-schema';
-import { PermissionError } from './permission-error';
+import { PermissionError } from './permission-error.js';
 
 type SchemaFunction = () => JSONSchema7 | Promise<JSONSchema7>;
 

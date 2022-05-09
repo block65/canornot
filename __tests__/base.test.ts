@@ -1,6 +1,7 @@
+import { describe, test, expect } from '@jest/globals';
 import type { JSONSchema7 } from 'json-schema';
-import { CanOrNot } from '../lib';
-import { PermissionError } from '../lib/permission-error';
+import { CanOrNot } from '../lib/index.js';
+import { PermissionError } from '../lib/permission-error.js';
 
 class TestError extends Error {
   constructor(m: string) {
