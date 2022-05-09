@@ -1,5 +1,6 @@
-import { randomApp } from './lib/random-app';
-import { PermissionError } from '../lib/permission-error';
+import { describe, expect, test } from '@jest/globals';
+import { PermissionError } from '../lib/permission-error.js';
+import { randomApp } from './lib/random-app.js';
 
 describe('Random App', () => {
   const ac = randomApp();
@@ -12,8 +13,8 @@ describe('Random App', () => {
       .can('user:get', {
         userId: '00030164495926034432',
       })
-      .then((): void => {
+      .then(() => {
         throw new Error('This test should disallow permission');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(PermissionError)));
+      .catch((err) => expect(err).toBeInstanceOf(PermissionError)));
 });
