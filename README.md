@@ -21,7 +21,7 @@ instance for the relevant user.
 import type { JSONSchema7 } from 'json-schema';
 import jsonwebtoken from 'jsonwebtoken';
 import { CanOrNot } from '@block65/canornot';
-import { datastore } from './lib/some-kind-of-datastore';
+import { datastore } from './lib/some-kind-of-datastore.js';
 
 // A policy that allows getting your own user details, and editing companies
 // in your list of company ids
@@ -52,17 +52,14 @@ async function getActorSchema(userId: string): Promise<JSONSchema7> {
       },
       companyIds: {
         type: 'number',
-        enum: [
-          null,
-          ...companyIds
-        ],
+        enum: [null, ...companyIds],
       },
     },
   };
 }
 
-export function createAbac(jwt: string): Canornot {
-  // Returns a Canornot instance with our user policy schema
+export function createAbac(jwt: string): CanOrNot {
+  // Returns a CanOrNot instance with our user policy schema
   // and an actor schema based on the decoded JWT details
   // NOTE: These methods can (and should) be memoized to reduce latency
   return new CanOrNot({
@@ -81,22 +78,22 @@ Example use of the above ABAC module `abac.ts`
 
 ```typescript
 // This is our ABAC module based on Canornot
-import { createAbac } from './abac';
+import { createAbac } from './abac.js';
 
 // JWT may come from a HTTP header or similar
 const jwt = 'eyJhbGciOiJIUz...NBjfe90nGM';
 
 // Create an ABAC instance using the JWT
-const userPermissions = createAbac(jwt);
+const abac = createAbac(jwt);
 
 // Permission is allowed
-userPermissions
+abac
   .can('user:get', 12344)
   .then(() => console.log('Permission allowed!'))
   .catch(() => console.warn('Permission denied!'));
 
 // Permission is denied!
-userPermissions
+abac
   .can('user:get', 99999)
   .then(() => console.log('Permission allowed!'))
   .catch(() => console.warn('Permission denied!'));
