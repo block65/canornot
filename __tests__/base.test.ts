@@ -35,8 +35,8 @@ const promiseWait = (
   value: JSONSchema7 | Error,
   ms: number,
 ): Promise<JSONSchema7> =>
-  new Promise((resolve, reject): void => {
-    setTimeout((): void => {
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
       if (value instanceof Error) {
         reject(value);
       } else {
@@ -84,12 +84,12 @@ const acWithTimeoutPromises = (): CanOrNot =>
 
 const acWithTimeoutBrokenPromises = (): CanOrNot =>
   new CanOrNot({
-    actorSchema: new Promise((_, reject) =>
-      setTimeout(() => reject(new TestError('Intentional Error')), 200),
-    ),
-    policySchema: new Promise((_, reject) =>
-      setTimeout(() => reject(new TestError('Intentional Error')), 200),
-    ),
+    actorSchema: new Promise((_, reject) => {
+      setTimeout(() => reject(new TestError('Intentional Error')), 200);
+    }),
+    policySchema: new Promise((_, reject) => {
+      setTimeout(() => reject(new TestError('Intentional Error')), 200);
+    }),
   });
 
 const acWithObjects = (): CanOrNot =>
@@ -208,7 +208,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(TestError));
+      .catch((err) => expect(err).toBeInstanceOf(TestError));
   });
 
   test('Access Control with callback policy errors', () => {
@@ -219,7 +219,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(TestError));
+      .catch((err) => expect(err).toBeInstanceOf(TestError));
   });
 
   test('Access Control with callback policy errors', () => {
@@ -230,7 +230,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(TestError));
+      .catch((err) => expect(err).toBeInstanceOf(TestError));
   });
 
   test('Access Control with policy PermissionError0', () => {
@@ -241,7 +241,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err: Error): void => {
+      .catch((err: Error) => {
         expect(err).toBeInstanceOf(PermissionError);
       });
   });
@@ -254,7 +254,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(TypeError));
+      .catch((err) => expect(err).toBeInstanceOf(TypeError));
   });
 
   test('Access Control with policy TypeErrors2', () => {
@@ -291,7 +291,7 @@ describe('Base', () => {
       .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(PermissionError));
+      .catch((err) => expect(err).toBeInstanceOf(PermissionError));
   });
 
   test('Access Control with reject (expected success)', () => {
@@ -303,7 +303,7 @@ describe('Base', () => {
   test('Access Control without reject', () => {
     const permission = acWithoutRejectOnPermissionDenied();
 
-    return permission.can('user:get', 999999999).then((valid): void => {
+    return permission.can('user:get', 999999999).then((valid) => {
       expect(valid).toBeFalsy();
     });
   });
@@ -313,20 +313,18 @@ describe('Base', () => {
 
     return permission
       .can('missing:permission', 999999999)
-      .then((): void => {
+      .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => expect(err).toBeInstanceOf(PermissionError));
+      .catch((err) => expect(err).toBeInstanceOf(PermissionError));
   });
 
   test('Access Control without reject on validator error', async () => {
     const permission = acWithoutRejectOnError();
 
-    return permission
-      .can('missing:permission', 999999999)
-      .then((valid): void => {
-        expect(valid).toBeFalsy();
-      });
+    return permission.can('missing:permission', 999999999).then((valid) => {
+      expect(valid).toBeFalsy();
+    });
   });
 
   test('Access Control with reject on validator error', () => {
@@ -334,10 +332,10 @@ describe('Base', () => {
 
     return permission
       .can('missing:permission', 999999999)
-      .then((xxx): void => {
+      .then(() => {
         throw new Error('This test should throw an error');
       })
-      .catch((err): void => {
+      .catch((err) => {
         expect(err).toBeInstanceOf(TestError);
       });
   });
