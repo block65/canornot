@@ -1,5 +1,5 @@
 
-SRCS = $(wildcard lib/** bin/**)
+SRCS = $(wildcard lib/**)
 
 all: dist
 
@@ -19,7 +19,6 @@ test: node_modules
 
 dist: node_modules tsconfig.json $(SRCS)
 	yarn tsc
-	chmod +x dist/bin/*.js
 
 .PHONY: dev
 dev: node_modules dist
