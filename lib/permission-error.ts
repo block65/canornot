@@ -6,10 +6,5 @@ export class PermissionError extends CustomError {
 
   public data: unknown;
 
-  constructor(message: string) {
-    super(message);
-    this.setName('PermissionError');
-    this.statusCode = Status.INVALID_ARGUMENT;
-    this.sensitive = true;
-  }
+  public code = Status.PERMISSION_DENIED;
 }
