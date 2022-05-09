@@ -2,14 +2,8 @@
   "name": "@block65/canornot",
   "version": "3.0.0",
   "license": "MIT",
-  "scripts": {
   "exports": {
     ".": "./dist/lib/index.js"
-    "build": "tsc",
-    "build:clean": "rimraf dist/*",
-    "build:watch": "tsc -w",
-    "prepare": "yarn build:clean && yarn test && yarn build",
-    "test": "jest"
   },
   "dependencies": {
     "@block65/custom-error": "^8.0.0",
