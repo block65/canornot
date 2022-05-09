@@ -18,9 +18,9 @@ Exports a function which takes a JWT, verifies it and then returns a `CanOrNot`
 instance for the relevant user.
 
 ```typescript
+import { CanOrNot } from '@block65/canornot';
 import type { JSONSchema7 } from 'json-schema';
 import jsonwebtoken from 'jsonwebtoken';
-import { CanOrNot } from '@block65/canornot';
 import { datastore } from './lib/some-kind-of-datastore.js';
 
 // A policy that allows getting your own user details, and editing companies
@@ -38,7 +38,7 @@ const policySchema: JSONSchema7 = {
 
 // Gets the actor schema with a little help from the datastore
 async function getActorSchema(userId: string): Promise<JSONSchema7> {
-  const { userId, companyIds } = await datastore.fetchUserById(userId);
+  const user = await datastore.fetchUserById(userId);
 
   return {
     $id: 'actor',
@@ -48,11 +48,11 @@ async function getActorSchema(userId: string): Promise<JSONSchema7> {
     properties: {
       userId: {
         type: 'number',
-        const: userId,
+        const: user.userId,
       },
       companyIds: {
         type: 'number',
-        enum: [null, ...companyIds],
+        enum: [null, ...user.companyIds],
       },
     },
   };
